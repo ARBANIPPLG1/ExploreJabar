@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXPLORE JABAR - Login</title>
+    <title>EXPLORE JABAR - Sign Up</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styling untuk menambahkan gambar latar belakang */
-        .bg-login {
-            background-image: url('image_674f3a.jpg'); /* Ganti dengan path atau URL gambar Anda */
+        .bg-signup {
+            /* Ganti dengan path atau URL gambar Anda untuk tampilan persis */
+            background-image: url('image_67b01d.jpg'); 
             background-size: cover;
             background-position: center;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center bg-login">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center bg-signup">
     
     <div class="max-w-md w-full mx-4 p-8 bg-white/70 backdrop-blur-sm rounded-xl shadow-2xl relative border border-white/50">
         
@@ -49,6 +50,18 @@
         <form action="#" method="POST" class="space-y-4">
             
             <div>
+                <label for="username" class="sr-only">Username</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    placeholder="username" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-white/50 placeholder-gray-600 text-gray-800"
+                    required
+                >
+            </div>
+
+            <div>
                 <label for="email" class="sr-only">Email</label>
                 <input 
                     type="email" 
@@ -77,15 +90,15 @@
             
             <button 
                 type="submit" 
-                class="w-full py-3 mt-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200 shadow-lg shadow-blue-500/50"
+                class="w-full py-3 mt-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200 shadow-lg shadow-blue-500/50"
             >
                 Let's Start
             </button>
         </form>
 
         <div class="text-center mt-6 text-sm">
-            <p class="text-gray-700">Don't have an account? 
-                <a href="signin.php" class="text-blue-600 font-medium hover:text-blue-800 transition duration-150">Sign Up</a>
+            <p class="text-gray-700">Already have an account? 
+                <a href="#" class="text-blue-600 font-medium hover:text-blue-800 transition duration-150">Sign in.</a>
             </p>
         </div>
         
