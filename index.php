@@ -8,7 +8,7 @@
     <style>
         /* Custom styling untuk menambahkan gambar latar belakang */
         .bg-login {
-            background-image: url('image_674f3a.jpg'); /* Ganti dengan path atau URL gambar Anda */
+            background-image: url('img/sawah.jpg'); /* Ganti dengan path atau URL gambar Anda */
             background-size: cover;
             background-position: center;
         }
@@ -85,7 +85,7 @@
 
         <div class="text-center mt-6 text-sm">
             <p class="text-gray-700">Don't have an account? 
-                <a href="signin.php" class="text-blue-600 font-medium hover:text-blue-800 transition duration-150">Sign Up</a>
+                <a href="signup.php" class="text-blue-600 font-medium hover:text-blue-800 transition duration-150">Sign Up</a>
             </p>
         </div>
         
