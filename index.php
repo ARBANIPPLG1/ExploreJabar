@@ -6,8 +6,14 @@
     <title>EXPLORE JABAR - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+<<<<<<< HEAD
         .bg-login {
             background-image: url('img/sawah.jpg'); /* Ganti dengan path atau URL gambar Anda */
+=======
+        /* Custom styling untuk menambahkan gambar latar belakang */
+        .bg-login {
+            background-image: url('image_674f3a.jpg'); /* Ganti dengan path atau URL gambar Anda */
+>>>>>>> d91720f4a5ae07986adc935213eaef2c57ccf0b2
             background-size: cover;
             background-position: center;
         }
