@@ -6,10 +6,8 @@
     <title>EXPLORE JABAR - Sign Up</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styling untuk menambahkan gambar latar belakang */
         .bg-signup {
-            /* Ganti dengan path atau URL gambar Anda untuk tampilan persis */
-            background-image: url('image_67b01d.jpg'); 
+            background-image: url('img/sawah.jpg'); 
             background-size: cover;
             background-position: center;
         }
