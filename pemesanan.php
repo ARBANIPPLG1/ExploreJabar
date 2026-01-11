@@ -1,207 +1,264 @@
 <?php
-// PHP untuk memulai sesi dan memeriksa otorisasi
 session_start();
+include 'config/app.php';
+include 'config/functions.php';
 
-// Data pengguna yang sudah login (Contoh data)
-$user_name = "Ahmad";
+// Check login status
+require_login();
+
+$user_data = [
+    'full_name' => $_SESSION['username'] ?? 'User',
+    'email' => '',
+    'phone' => ''
+];
+
+$booking_error = '';
+$booking_success = false;
+
+// Process booking
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
+    // Validate input
+    $full_name = sanitize($_POST['full_name'] ?? '');
+    $email = sanitize($_POST['email'] ?? '');
+    $phone = sanitize($_POST['phone'] ?? '');
+    $date_of_birth = sanitize($_POST['date_of_birth'] ?? '');
+    $destination = sanitize($_POST['destination'] ?? '');
+    $package = sanitize($_POST['package'] ?? '');
+    $start_date = sanitize($_POST['start_date'] ?? '');
+    $participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
+    $duration = sanitize($_POST['duration'] ?? '');
+    $special_requests = sanitize($_POST['special_requests'] ?? '');
+
+    if (empty($full_name) || empty($email) || empty($phone) || empty($destination) || empty($package) || empty($start_date)) {
+        $booking_error = 'Please fill in all required fields';
+    } elseif (!is_valid_email($email)) {
+        $booking_error = 'Please enter a valid email address';
+    } elseif ($participants < 1) {
+        $booking_error = 'Number of participants must be at least 1';
+    } else {
+        // Save booking to database
+        $booking_query = "INSERT INTO bookings (username, full_name, email, phone, date_of_birth, destination, package, start_date, participants, duration, special_requests, status, created_at) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
+        
+        $stmt = $conn->prepare($booking_query);
+        $username = $_SESSION['username'];
+        $stmt->bind_param("ssssssssiss", $username, $full_name, $email, $phone, $date_of_birth, $destination, $package, $start_date, $participants, $duration, $special_requests);
+        
+        if ($stmt->execute()) {
+            $booking_success = true;
+        } else {
+            $booking_error = 'Failed to save booking. Please try again.';
+        }
+    }
+}
 ?>
+<?php include 'config/header.php'; ?>
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXPLORE JABAR - Plan Your Adventure</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-</head>
-<body class="bg-gray-50">
+<!-- Page Header -->
+<section class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-4xl font-bold mb-2">Plan Your Adventure</h1>
+        <p class="text-blue-100">Book your unforgettable journey through West Java</p>
+    </div>
+</section>
 
-    <header class="bg-blue-800 text-white shadow-md">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="homepage.php" class="text-xl font-bold uppercase tracking-wider">
-                EXPLORE JABAR
-            </a>
-
-            <nav class="hidden md:flex items-center space-x-6">
-                <a href="homepage.php" class="hover:text-blue-200 font-semibold transition duration-150">HOME</a>
-                <a href="#" class="hover:text-blue-200 font-semibold transition duration-150">ABOUT US</a>
-                <a href="#" class="hover:text-blue-200 font-semibold transition duration-150">TOUR</a>
-                <a href="#" class="hover:text-blue-200 font-semibold transition duration-150">GALERY</a>
-                <a href="#" class="hover:text-blue-200 font-semibold transition duration-150">CONTACT</a>
-            </nav>
-
-            <div class="flex items-center space-x-4">
-                <span class="text-sm font-semibold hidden sm:block"><?php echo htmlspecialchars($user_name); ?></span>
-                <a href="#" class="w-8 h-8 bg-gray-300 rounded-full overflow-hidden border-2 border-white" title="Profile">
-                    <img src="images/ahmad_avatar.jpg" alt="<?php echo htmlspecialchars($user_name); ?>" class="w-full h-full object-cover">
-                </a>
-                <button class="relative text-white hover:text-blue-200">
-                    <i class="fas fa-bell text-lg"></i>
-                    <span class="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-blue-800 bg-red-500"></span>
-                </button>
-            </div>
+<!-- Success Alert -->
+<?php if ($booking_success): ?>
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50" id="successAlert">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 mx-auto mb-4">
+            <i class="fas fa-check text-2xl"></i>
         </div>
-    </header>
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">Booking Confirmed!</h3>
+        <p class="text-gray-600 mb-6">Your booking has been submitted successfully. We'll send you a confirmation email shortly.</p>
+        <a href="homepage.php" class="inline-block px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition">
+            Back to Home
+        </a>
+    </div>
+</div>
+<?php endif; ?>
 
-    <main class="container mx-auto px-6 py-12">
-        <div class="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-lg shadow-xl">
-            
-            <div class="text-center mb-10">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Plan Your Adventure</h1>
-                <p class="text-gray-500">We just need some information to complete your booking.</p>
-            </div>
-
-            <form action="proses_pemesanan.php" method="POST" class="space-y-8">
-
-                <div class="space-y-6">
-                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                        <span class="inline-block w-2 h-2 rounded-full bg-blue-600 mr-3"></span> Personal Information
-                    </h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="full_name" class="font-medium text-gray-700">Full Name:</label>
-                        <input type="text" id="full_name" name="full_name" required class="md:col-span-2 block w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500">
+<!-- Main Content -->
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Form Section -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <?php if ($booking_error): ?>
+                    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-600 rounded">
+                        <p class="text-red-700 font-semibold"><i class="fas fa-exclamation-circle mr-2"></i><?php echo $booking_error; ?></p>
                     </div>
+                <?php endif; ?>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="date_of_birth" class="font-medium text-gray-700">Date of Birth:</label>
-                        <input type="date" id="date_of_birth" name="date_of_birth" required class="md:col-span-2 block w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
+                <form action="" method="POST" class="space-y-8">
+                    <!-- Personal Information Section -->
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                            <span class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full mr-3 text-sm">1</span>
+                            Personal Information
+                        </h2>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="phone_number" class="font-medium text-gray-700">Phone Number:</label>
-                        <input type="tel" id="phone_number" name="phone_number" required class="md:col-span-2 block w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="address" class="font-medium text-gray-700">Address:</label>
-                        <input type="text" id="address" name="address" required class="md:col-span-2 block w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
-                
-                <hr class="border-gray-200 my-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Full Name *</label>
+                                <input type="text" name="full_name" value="<?php echo htmlspecialchars($user_data['full_name']); ?>" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
 
-                <div class="space-y-6">
-                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                        <span class="inline-block w-2 h-2 rounded-full bg-blue-600 mr-3"></span> Trip Details
-                    </h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="destination" class="font-medium text-gray-700">Destination:</label>
-                        <input type="text" id="destination" name="destination" required class="md:col-span-2 block w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Date of Birth *</label>
+                                <input type="date" name="date_of_birth" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="package" class="font-medium text-gray-700">Select Package:</label>
-                        <div class="md:col-span-2 relative">
-                            <select id="package" name="package" required class="block appearance-none w-full border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">-- Pilih Paket --</option>
-                                <option value="standard">Standard Package</option>
-                                <option value="premium">Premium Package</option>
-                                <option value="luxury">Luxury Package</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-                                <i class="fas fa-chevron-down text-xs"></i>
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Email Address *</label>
+                                <input type="email" name="email" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Phone Number *</label>
+                                <input type="tel" name="phone" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="choose_date" class="font-medium text-gray-700">Choose Date:</label>
-                        <input type="date" id="choose_date" name="choose_date" required class="md:col-span-2 block w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500">
+
+                    <hr class="border-gray-200">
+
+                    <!-- Trip Details Section -->
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                            <span class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full mr-3 text-sm">2</span>
+                            Trip Details
+                        </h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Destination *</label>
+                                <select name="destination" required 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white cursor-pointer">
+                                    <option value="">-- Select Destination --</option>
+                                    <option value="Papandayan Mountain">Papandayan Mountain</option>
+                                    <option value="Tangkuban Perahu">Tangkuban Perahu</option>
+                                    <option value="Gede Pangrango">Gede Pangrango</option>
+                                    <option value="Pelabuhan Ratu">Pelabuhan Ratu</option>
+                                    <option value="Pangandaran">Pangandaran</option>
+                                    <option value="Karang Potong">Karang Potong</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Package *</label>
+                                <select name="package" required 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white cursor-pointer">
+                                    <option value="">-- Select Package --</option>
+                                    <option value="standard">Standard Package - Rp 1.500.000</option>
+                                    <option value="premium">Premium Package - Rp 2.500.000</option>
+                                    <option value="luxury">Luxury Package - Rp 4.000.000</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Start Date *</label>
+                                <input type="date" name="start_date" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Duration *</label>
+                                <input type="text" name="duration" placeholder="e.g., 3 Days 2 Nights" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 font-semibold mb-2">Number of Participants *</label>
+                                <input type="number" name="participants" min="1" value="1" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="participants" class="font-medium text-gray-700">Number of Participant:</label>
-                        <input type="number" id="participants" name="participants" required min="1" class="md:col-span-2 block w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500">
+
+                    <hr class="border-gray-200">
+
+                    <!-- Special Requests Section -->
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                            <span class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full mr-3 text-sm">3</span>
+                            Special Requests
+                        </h2>
+
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Additional Notes (Optional)</label>
+                            <textarea name="special_requests" rows="4" placeholder="Tell us about any special requirements or preferences..."
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"></textarea>
+                        </div>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                        <label for="duration" class="font-medium text-gray-700">Duration:</label>
-                        <input type="text" id="duration" name="duration" placeholder="e.g., 3 Days 2 Nights" required class="md:col-span-2 block w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500">
+
+                    <hr class="border-gray-200">
+
+                    <!-- Terms & Conditions -->
+                    <div class="space-y-3">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox" name="terms" required class="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+                            <span class="ml-3 text-gray-700">I agree to the <a href="#" class="text-blue-600 hover:underline font-semibold">terms and conditions</a></span>
+                        </label>
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox" name="confirm_info" required class="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+                            <span class="ml-3 text-gray-700">I confirm that all information is accurate and complete</span>
+                        </label>
                     </div>
-                </div>
-                
-                <hr class="border-gray-200 my-8">
+
+                    <button type="submit" name="submit_booking" 
+                            class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-check-circle mr-2"></i> Confirm Booking
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="lg:col-span-1">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 sticky top-24">
+                <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                    <i class="fas fa-receipt text-blue-600 mr-2"></i> Booking Summary
+                </h3>
 
                 <div class="space-y-4">
-                    <div class="flex items-center">
-                        <input id="terms_conditions" name="terms_conditions" type="checkbox" required class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <label for="terms_conditions" class="ml-3 block text-sm text-gray-700 select-none">
-                            I agree to the <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">terms & conditions</a>
-                        </label>
+                    <div class="bg-white rounded-lg p-4">
+                        <p class="text-sm text-gray-600">Destination</p>
+                        <p class="text-lg font-bold text-gray-900">To be selected</p>
                     </div>
 
-                    <div class="flex items-center">
-                        <input id="info_correct" name="info_correct" type="checkbox" required class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <label for="info_correct" class="ml-3 block text-sm text-gray-700 select-none">
-                            I confirm that all information is correct
-                        </label>
+                    <div class="bg-white rounded-lg p-4">
+                        <p class="text-sm text-gray-600">Package Type</p>
+                        <p class="text-lg font-bold text-gray-900">To be selected</p>
                     </div>
-                </div>
 
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition duration-200 mt-6">
-                    Confirm Booking
-                </button>
+                    <div class="bg-white rounded-lg p-4">
+                        <p class="text-sm text-gray-600">Number of Guests</p>
+                        <p class="text-lg font-bold text-gray-900">1 Person</p>
+                    </div>
 
-            </form>
-        </div>
-    </main>
+                    <hr class="border-blue-200 my-4">
 
-    <footer class="bg-white pt-16 border-t border-gray-200 mt-12">
-        <div class="container mx-auto px-6 pb-10">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-                <div>
-                    <h3 class="text-2xl font-bold text-blue-700 uppercase tracking-wider mb-2">
-                        EXPLORE JABAR
-                    </h3>
-                    <p class="text-gray-600 text-base">
-                        Your trusted guide to discovering the beauty of West Java.
-                    </p>
-                    <div class="w-1/3 mt-4 border-b-2 border-blue-600"></div>
-                </div>
+                    <div class="bg-white rounded-lg p-4">
+                        <p class="text-sm text-gray-600 mb-1">Estimated Price</p>
+                        <p class="text-2xl font-bold text-blue-600">Rp 1.500.000</p>
+                        <p class="text-xs text-gray-500 mt-2">* Price may vary depending on selected options</p>
+                    </div>
 
-                <div class="md:col-span-1">
-                    <nav class="flex flex-wrap space-x-6 md:space-x-8 text-gray-700 text-base font-medium mt-12 md:mt-0">
-                        <a href="homepage.php" class="hover:text-blue-600 transition duration-150">HOME</a>
-                        <a href="#" class="hover:text-blue-600 transition duration-150">ABOUT US</a>
-                        <a href="#" class="hover:text-blue-600 transition duration-150">TOUR</a>
-                        <a href="#" class="hover:text-blue-600 transition duration-150">GALERY</a>
-                        <a href="#" class="hover:text-blue-600 transition duration-150">CONTACT</a>
-                    </nav>
-                </div>
-
-                <div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-6">Contact Us</h3>
-                    <div class="space-y-4 text-gray-600">
-                        <div class="flex items-start">
-                            <i class="fas fa-map-marker-alt text-lg text-blue-600 mr-3 mt-1"></i>
-                            <p>Jl. Aminah Syukur No.82, Sungai Pinang Luar, Kec. Samarinda Kota, Kota Samarinda, Kalimantan Timur 75113</p>
-                        </div>
+                    <div class="bg-blue-600 text-white rounded-lg p-4">
                         <div class="flex items-center">
-                            <i class="fas fa-phone-alt text-lg text-blue-600 mr-3"></i>
-                            <div>
-                                <p>(555) 111-2345</p>
-                                <p>(555) 222-6789</p>
-                            </div>
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <span class="text-sm">Complete your booking to proceed to payment</span>
                         </div>
-                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="bg-blue-800 text-white py-4">
-            <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-sm">
-                <div class="flex space-x-6 mb-2 md:mb-0">
-                    <a href="#" class="hover:underline">Help Center</a>
-                    <a href="#" class="hover:underline">Terms</a>
-                    <a href="#" class="hover:underline">Privacy</a>
-                </div>
-                <p>&copy; 2025 ExploreJabar. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-</body>
-</html>
+<?php include 'config/footer.php'; ?>

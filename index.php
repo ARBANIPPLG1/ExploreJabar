@@ -2,6 +2,8 @@
 session_start();
 include 'config/app.php';
 
+$error_message = '';
+
 if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -23,10 +25,10 @@ if (isset($_POST['login'])) {
             } 
         
         } else {
-            echo "Password salah!";
+            $error_message = 'password';
         }
     } else {
-        echo "Username tidak ditemukan!";
+        $error_message = 'username';
     }
 }
 ?>
@@ -44,9 +46,108 @@ if (isset($_POST['login'])) {
             background-size: cover;
             background-position: center;
         }
+
+        /* Alert Animation */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+
+        .alert-enter {
+            animation: slideInDown 0.4s ease-out;
+        }
+
+        .alert-exit {
+            animation: slideOutUp 0.4s ease-in;
+        }
+
+        /* Shake animation untuk error */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Close button hover effect */
+        .close-btn:hover {
+            transform: rotate(90deg);
+            transition: transform 0.3s ease;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center bg-login">
+    
+    <!-- Error Alert Modal -->
+    <?php if ($error_message): ?>
+    <div class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 alert-enter" id="errorAlert">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative border border-red-100 shake">
+            <!-- Close button -->
+            <button onclick="closeAlert()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition close-btn">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <!-- Icon -->
+            <div class="flex justify-center mb-4">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Message -->
+            <h3 class="text-center text-xl font-bold text-gray-800 mb-2">Autentikasi Gagal</h3>
+            
+            <p class="text-center text-gray-600 mb-6">
+                <?php 
+                    if ($error_message === 'password') {
+                        echo 'Password yang Anda masukkan tidak sesuai dengan akun Anda. Silakan coba lagi.';
+                    } else {
+                        echo 'Username tidak ditemukan dalam sistem. Silakan periksa kembali atau daftar akun baru.';
+                    }
+                ?>
+            </p>
+
+            <!-- Action buttons -->
+            <div class="flex gap-3">
+                <button onclick="closeAlert()" class="flex-1 px-4 py-3 bg-gray-100 text-gray-800 font-semibold rounded-lg hover:bg-gray-200 transition duration-200">
+                    Coba Lagi
+                </button>
+                <a href="signup.php" class="flex-1 px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200 text-center">
+                    Daftar
+                </a>
+            </div>
+
+            <!-- Info text -->
+            <p class="text-center text-xs text-gray-500 mt-4">
+                <?php echo $error_message === 'password' ? 'Pastikan huruf besar dan kecil sesuai' : 'Perlu bantuan? Hubungi tim support'; ?>
+            </p>
+        </div>
+    </div>
+    <?php endif; ?>
     
     <div class="max-w-md w-full mx-4 p-8 bg-white/70 backdrop-blur-sm rounded-xl shadow-2xl relative border border-white/50">
         
@@ -124,6 +225,31 @@ if (isset($_POST['login'])) {
         
     </div>
 
+    <script>
+        function closeAlert() {
+            const alert = document.getElementById('errorAlert');
+            alert.classList.remove('alert-enter');
+            alert.classList.add('alert-exit');
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 400);
+        }
+
+        // Toggle password visibility
+        document.querySelector('button[type="button"]').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            
+            // Update icon
+            const svg = this.querySelector('svg');
+            if (isPassword) {
+                svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.596-3.856a3.375 3.375 0 11-4.753 4.753m4.753-4.753L9.172 9.172m5.656 5.656l1.414-1.414m1.414 1.414L15.172 15.172m-4.243 4.243l1.414 1.414"></path>';
+            } else {
+                svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+            }
+        });
+    </script>
 </body>
 </html>
 
